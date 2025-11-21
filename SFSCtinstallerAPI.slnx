@@ -1,5 +1,5 @@
 <Solution>
-  <Folder Name="/解决方案项/">
+  <Folder Name="/SolutionFolder/">
     <File Path="LICENSE.txt" />
     <File Path="README.md" />
   </Folder>

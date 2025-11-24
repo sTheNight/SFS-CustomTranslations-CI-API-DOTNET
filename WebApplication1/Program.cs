@@ -6,10 +6,10 @@ namespace SFSCtinstallerAPI {
         public static void Main(string[] args) {
             var builder = WebApplication.CreateBuilder(args);
             if (!LoadDotEnv()) {
-                Console.WriteLine("enviroment variable is not config");
+                Console.WriteLine("Environment variables are not configured");
                 return;
             }
-            Console.WriteLine("Program is loading");
+            Console.WriteLine("Program is running");
 
             builder.Services.AddControllers().AddNewtonsoftJson();
             builder.Services.AddEndpointsApiExplorer();

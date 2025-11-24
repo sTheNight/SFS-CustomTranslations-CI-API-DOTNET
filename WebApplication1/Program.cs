@@ -1,58 +1,55 @@
-using dotenv.net;
+﻿using dotenv.net;
 using SFSCtinstallerAPI;
-using Microsoft.Extensions.DependencyInjection;
-namespace SFSCtinstallerAPI {
-    public class Program {
-        public static void Main(string[] args) {
-            var builder = WebApplication.CreateBuilder(args);
-            if (!LoadDotEnv()) {
-                Console.WriteLine("Environment variables are not configured");
-                return;
-            }
-            Console.WriteLine("Program is running");
 
-            builder.Services.AddControllers().AddNewtonsoftJson();
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-            builder.Services.AddCors(options => {
-                options.AddPolicy("AllowAll", policy => {
-                    policy
-                        .AllowAnyOrigin()
-                        .AllowAnyHeader()
-                        .AllowAnyMethod();
-                });
-            });
+if (!LoadDotEnv()) {
+    Console.WriteLine("Error: Required environment variables are not configured.");
+    return;
+}
 
-            var app = builder.Build();
+Console.WriteLine("Program is running");
 
-            if (app.Environment.IsDevelopment()) {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+var builder = WebApplication.CreateBuilder(args);
 
-            app.UseHttpsRedirection();
-            app.UseAuthorization();
-            app.UseCors("AllowAll");
-            app.MapControllers();
+builder.Services.AddControllers().AddNewtonsoftJson();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
-            app.Run();
+builder.Services.AddCors(options => {
+    options.AddPolicy("AllowAll", policy => policy
+        .AllowAnyOrigin()
+        .AllowAnyHeader()
+        .AllowAnyMethod());
+});
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment()) {
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+app.UseAuthorization();
+app.UseCors("AllowAll");
+app.MapControllers();
+
+app.Run();
+
+static bool LoadDotEnv() {
+    try {
+        DotEnv.Load();
+        Global.GITHUB_REPO_NAME = Environment.GetEnvironmentVariable("GITHUB_REPO_NAME");
+        Global.GITHUB_REPO_OWNER = Environment.GetEnvironmentVariable("GITHUB_REPO_OWNER");
+        Global.GITHUB_TOKEN = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+
+        if (string.IsNullOrEmpty(Global.GITHUB_TOKEN) ||
+            string.IsNullOrEmpty(Global.GITHUB_REPO_OWNER) ||
+            string.IsNullOrEmpty(Global.GITHUB_REPO_NAME)) {
+            return false;
         }
-        public static bool LoadDotEnv() {
-            try {
-                DotEnv.Load();
-                Global.GITHUB_REPO_NAME = Environment.GetEnvironmentVariable("GITHUB_REPO_NAME");
-                Global.GITHUB_REPO_OWNER = Environment.GetEnvironmentVariable("GITHUB_REPO_OWNER");
-                Global.GITHUB_TOKEN = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
-                if (String.IsNullOrEmpty(Global.GITHUB_TOKEN)
-                    || String.IsNullOrEmpty(Global.GITHUB_REPO_OWNER)
-                    || String.IsNullOrEmpty(Global.GITHUB_REPO_NAME)) {
-                    return false;
-                }
-                return true;
-            } catch (Exception) {
-                return false;
-                throw;
-            }
-        }
+        return true;
+    } catch (Exception ex) {
+        Console.WriteLine($"Error loading environment variables: {ex.Message}");
+        return false;
     }
 }

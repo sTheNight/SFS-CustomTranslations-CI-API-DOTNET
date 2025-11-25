@@ -3,5 +3,5 @@
     <File Path="LICENSE.txt" />
     <File Path="README.md" />
   </Folder>
-  <Project Path="WebApplication1/SFSCtinstallerAPI.csproj" />
+  <Project Path="SFSCtinstallerAPI/SFSCtinstallerAPI.csproj" />
 </Solution>

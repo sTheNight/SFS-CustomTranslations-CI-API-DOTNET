@@ -1,14 +1,7 @@
 ﻿using dotenv.net;
-using System;
 using System.Net.Http.Headers;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Hosting;
 using SFSCtinstallerAPI.Configuration;
 using SFSCtinstallerAPI.Utils;
-using Newtonsoft.Json.Linq;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
 using System.Text;
 
 static bool LoadDotEnv() {

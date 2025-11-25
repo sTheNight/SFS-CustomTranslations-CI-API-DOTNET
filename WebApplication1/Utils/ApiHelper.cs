@@ -1,8 +1,4 @@
 ﻿using Newtonsoft.Json.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System;
-using System.IO;
 using Microsoft.Extensions.Options;
 using SFSCtinstallerAPI.Configuration;
 

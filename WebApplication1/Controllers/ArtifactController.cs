@@ -6,6 +6,11 @@ namespace SFSCtinstallerAPI.Controllers {
     [Route("[controller]")]
     [ApiController]
     public class ArtifactController : ControllerBase {
+        private ApiHelper ApiHelper;
+        // 构造函数注入 ApiHelper 服务
+        public ArtifactController(ApiHelper _apiHelper) {
+            ApiHelper = _apiHelper;
+        }
         [HttpGet("latest")]
         public async Task<IActionResult> GetLatestArtifact() {
             try {

@@ -6,7 +6,13 @@ namespace SFSCtinstallerAPI.Controllers {
     [Route("[controller]")]
     [ApiController]
     public class InfoController : ControllerBase {
+        private ApiHelper ApiHelper;
+        // 构造函数注入 ApiHelper 服务
+        public InfoController(ApiHelper apiHelper) {
+            ApiHelper = apiHelper;
+        }
         [HttpGet("latest")]
+        // 获取最新构建信息
         public async Task<IActionResult> GetLatestInfo() {
             try {
                 var buildInfo = await ApiHelper.GetArtifacts();
@@ -24,7 +30,7 @@ namespace SFSCtinstallerAPI.Controllers {
                 return StatusCode(500, "Server error while fetching latest artifact info");
             }
         }
-
+        // 根据 ID 获取指定构建信息
         [HttpGet("{id}")]
         public async Task<IActionResult> GetInfoById([FromRoute] string id) {
             if (string.IsNullOrWhiteSpace(id))

@@ -6,6 +6,11 @@ namespace SFSCtinstallerAPI.Controllers {
     [Route("[controller]")]
     [ApiController]
     public class HistoryController : ControllerBase {
+        private ApiHelper ApiHelper;
+        // 构造函数注入 ApiHelper 服务
+        public HistoryController(ApiHelper apiHelper) {
+            ApiHelper = apiHelper;
+        }
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery] int? page = 1) {
             int pageNumber = page.GetValueOrDefault(1);

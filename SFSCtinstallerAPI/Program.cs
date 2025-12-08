@@ -29,11 +29,12 @@ builder.Services.Configure<GitHubSettings>(builder.Configuration);
 builder.Services.AddHttpClient<ApiHelper>(client => {
     // 为 ApiHelper 配置 HttpClient
     var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+    var header = client.DefaultRequestHeaders;
     client.BaseAddress = new Uri("https://api.github.com/");
-    client.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
-    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-    client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
-    client.DefaultRequestHeaders.Add("User-Agent", "Github-REST-API-Test");
+    header.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    header.Add("Accept", "application/vnd.github+json");
+    header.Add("X-GitHub-Api-Version", "2022-11-28");
+    header.Add("User-Agent", "Github-REST-API-Test");
 });
 
 builder.Services.AddControllers().AddNewtonsoftJson();

@@ -1,68 +1,77 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
+using SFSCtinstallerAPI.Models;
 using SFSCtinstallerAPI.Utils;
 
-namespace SFSCtinstallerAPI.Controllers {
-    [Route("[controller]")]
-    [ApiController]
-    public class ArtifactController : ControllerBase {
-        private readonly ApiHelper ApiHelper;
-        // 构造函数注入 ApiHelper 服务
-        public ArtifactController(ApiHelper _apiHelper) {
-            ApiHelper = _apiHelper;
+namespace SFSCtinstallerAPI.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class ArtifactController : ControllerBase {
+    private readonly GithubApiService _githubApiService;
+
+    // 构造函数注入 ApiHelper 服务
+    public ArtifactController(GithubApiService githubApiService) {
+        _githubApiService = githubApiService;
+    }
+
+    [HttpGet("latest")]
+    public async Task<IActionResult> GetLatestArtifact() {
+        try {
+            var buildInfo = await _githubApiService.GetArtifacts();
+            var buildList = buildInfo["artifacts"] as JArray;
+
+            if (buildList == null || buildList.Count == 0)
+                return NotFound(new ErrorMessage {
+                    Message = "无法找到此构建"
+                });
+
+            var latestBuild = buildList[0];
+            var artifactId = latestBuild["id"]?.ToString();
+
+            if (string.IsNullOrEmpty(artifactId))
+                return BadRequest(new ErrorMessage {
+                    Message = "无效的构建 ID"
+                });
+
+            var stream = await _githubApiService.DownloadArtifact(artifactId);
+            var fileName = $"{latestBuild["name"]}_{artifactId}.zip";
+            return File(stream, "application/zip", fileName);
+        } catch (Exception ex) {
+            Console.WriteLine($"[Error] GetLatestArtifact: {ex}");
+            return StatusCode(500, new ErrorMessage {
+                Message = "构建产物获取失败"
+            });
         }
-        [HttpGet("latest")]
-        public async Task<IActionResult> GetLatestArtifact() {
-            try {
-                var buildInfo = await ApiHelper.GetArtifacts();
-                var buildList = buildInfo["artifacts"] as JArray;
+    }
 
-                if (buildList == null || buildList.Count == 0)
-                    return NotFound("No artifacts found");
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetArtifactById([FromRoute] string id) {
+        if (string.IsNullOrWhiteSpace(id))
+            return BadRequest(new ErrorMessage {
+                Message = "构建 ID 不得为空"
+            });
 
-                var latestBuild = buildList[0];
-                var artifactId = latestBuild["id"]?.ToString();
+        try {
+            var artifactInfo = await _githubApiService.GetArtifactById(id);
+            if (artifactInfo == null)
+                return NotFound($"Artifact {id} not found");
 
-                if (string.IsNullOrEmpty(artifactId))
-                    return BadRequest("Invalid artifact ID");
+            var stream = await _githubApiService.DownloadArtifact(id);
 
-                var stream = await ApiHelper.DownloadArtifact(artifactId);
-                if (stream == null)
-                    return NotFound("Artifact stream not found");
+            var fileName = $"{artifactInfo.Name}_{artifactInfo.Id}.zip";
 
-                var fileName = $"{latestBuild["name"]}_{artifactId}.zip";
-
-                return File(stream, "application/zip", fileName);
-            } catch (Exception ex) {
-                Console.WriteLine($"[Error] GetLatestArtifact: {ex}");
-                return StatusCode(500, "Failed to download latest artifact");
-            }
-        }
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetArtifactById([FromRoute] string id) {
-            if (string.IsNullOrWhiteSpace(id))
-                return BadRequest("Artifact ID cannot be empty");
-
-            try {
-                var artifactInfo = await ApiHelper.GetArtifactById(id);
-                if (artifactInfo == null)
-                    return NotFound($"Artifact {id} not found");
-
-                var stream = await ApiHelper.DownloadArtifact(id);
-                if (stream == null)
-                    return NotFound($"Artifact stream {id} not found");
-
-                var fileName = $"{artifactInfo["name"]}_{artifactInfo["id"]}.zip";
-
-                return File(stream, "application/zip", fileName);
-            } catch (HttpRequestException httpEx) {
-                Console.WriteLine($"[HTTP Error] GetArtifactById({id}): {httpEx}");
-                return StatusCode(502, "Failed to fetch artifact from GitHub");
-            } catch (Exception ex) {
-                Console.WriteLine($"[Error] GetArtifactById({id}): {ex}");
-                return StatusCode(500, "Server error while downloading artifact");
-            }
+            return File(stream, "application/zip", fileName);
+        } catch (HttpRequestException httpEx) {
+            Console.WriteLine($"[HTTP Error] GetArtifactById({id}): {httpEx}");
+            return StatusCode(502, new ErrorMessage {
+                Message = "无法下载构建产物"
+            });
+        } catch (Exception ex) {
+            Console.WriteLine($"[Error] GetArtifactById({id}): {ex}");
+            return StatusCode(500, new ErrorMessage {
+                Message = ex.Message
+            });
         }
     }
 }

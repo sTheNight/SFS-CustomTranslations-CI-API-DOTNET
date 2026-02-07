@@ -2,7 +2,6 @@
 using System.Net.Http.Headers;
 using SFSCtinstallerAPI.Configuration;
 using SFSCtinstallerAPI.Utils;
-using System.Text;
 
 static bool LoadDotEnv() {
     try {
@@ -26,7 +25,7 @@ if (!LoadDotEnv()) {
 var builder = WebApplication.CreateBuilder(args);
 // 注册 DI 服务
 builder.Services.Configure<GitHubSettings>(builder.Configuration);
-builder.Services.AddHttpClient<ApiHelper>(client => {
+builder.Services.AddHttpClient<GithubApiService>(client => {
     // 为 ApiHelper 配置 HttpClient
     var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
     var header = client.DefaultRequestHeaders;
@@ -49,11 +48,6 @@ builder.Services.AddCors(options => {
 });
 
 var app = builder.Build();
-// 配置 Swagger 中间件，虽然我没用上
-if (app.Environment.IsDevelopment()) {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
@@ -61,8 +55,7 @@ app.UseAuthorization();
 app.UseCors("AllowAll");
 app.MapControllers();
 
-app.MapGet("/", () => {
-    return Results.Content("Hello World!", "text/plain", Encoding.UTF8);
-});
+app.UseStaticFiles();
+app.MapFallbackToFile("index.html");
 
 app.Run();

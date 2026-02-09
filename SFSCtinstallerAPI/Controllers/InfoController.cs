@@ -20,9 +20,13 @@ public class InfoController : ControllerBase {
     public async Task<IActionResult> GetLatestInfo() {
         try {
             var buildInfo = await _githubApiService.GetArtifacts();
-            var buildList = buildInfo["artifacts"] as JArray;
+            if (buildInfo == null)
+                return BadRequest(new ErrorMessage {
+                    Message = "Something went wrong"
+                });
+            var buildList = buildInfo.Artifacts;
 
-            if (buildList == null || buildList.Count == 0)
+            if (buildList.Count == 0)
                 return NotFound(new ErrorMessage {
                     Message = "无法找到构建产物"
                 });
@@ -42,13 +46,8 @@ public class InfoController : ControllerBase {
     }
 
     // 根据 ID 获取指定构建信息
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetInfoById([FromRoute] string id) {
-        if (string.IsNullOrWhiteSpace(id))
-            return BadRequest(new ErrorMessage {
-                Message = "构建 ID 不得为空"
-            });
-
+    [HttpGet("{id:long}")]
+    public async Task<IActionResult> GetInfoById([FromRoute] long id) {
         try {
             var buildInfo = await _githubApiService.GetArtifactById(id);
             if (buildInfo == null)

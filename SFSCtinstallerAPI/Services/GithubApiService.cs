@@ -16,7 +16,7 @@ public class GithubApiService {
     }
 
     // 获取构建产物列表
-    public async Task<JObject> GetArtifacts(int perPage = 1, int page = 1) {
+    public async Task<HistoryArtifactDto?> GetArtifacts(int perPage = 1, int page = 1) {
         // 限制每页最大10个，并防止非法参数
         if (perPage > 10 || perPage <= 0)
             perPage = 1;
@@ -34,14 +34,12 @@ public class GithubApiService {
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
-        return JObject.Parse(content);
+        var historyArtifacts = JsonConvert.DeserializeObject<HistoryArtifactDto>(content);
+        return historyArtifacts;
     }
 
     // 根据 ID 获取单个构建产物信息
-    public async Task<GithubArtifact?> GetArtifactById(string artifactId) {
-        if (string.IsNullOrEmpty(artifactId))
-            throw new ArgumentNullException("artifactId is null");
-
+    public async Task<GithubArtifact?> GetArtifactById(long artifactId) {
         var url = $"repos/{_settings.GITHUB_REPO_OWNER}/{_settings.GITHUB_REPO_NAME}/actions/artifacts/{artifactId}";
         using var response = await _httpClient.GetAsync(url);
         response.EnsureSuccessStatusCode();
@@ -51,7 +49,7 @@ public class GithubApiService {
     }
 
     // 根据 ID 下载构建产物
-    public async Task<Stream> DownloadArtifact(string artifactId) {
+    public async Task<Stream> DownloadArtifact(long artifactId) {
         var artifactInfo = await GetArtifactById(artifactId);
         if (artifactInfo == null) 
             throw new ArgumentException($"Artifact {artifactId} not found");

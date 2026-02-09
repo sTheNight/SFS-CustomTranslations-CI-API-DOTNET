@@ -25,8 +25,11 @@ public class HistoryController : ControllerBase {
 
         try {
             var buildInfo = await _githubApiService.GetArtifacts(10, pageNumber);
-            var buildList = buildInfo["artifacts"] as JArray;
-            return Ok(buildList);
+            if (buildInfo == null)
+                return BadRequest(new ErrorMessage {
+                    Message = "Something went wrong"
+                });
+            return Ok(buildInfo);
         } catch (HttpRequestException httpEx) {
             Console.WriteLine($"[HTTP Error] HistoryController.Get(page={pageNumber}): {httpEx}");
             return StatusCode(502, new ErrorMessage {

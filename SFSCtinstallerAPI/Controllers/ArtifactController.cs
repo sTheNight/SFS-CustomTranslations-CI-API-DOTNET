@@ -19,23 +19,22 @@ public class ArtifactController : ControllerBase {
     public async Task<IActionResult> GetLatestArtifact() {
         try {
             var buildInfo = await _githubApiService.GetArtifacts();
-            var buildList = buildInfo["artifacts"] as JArray;
+            if (buildInfo == null)
+                return BadRequest(new ErrorMessage {
+                    Message = "Something went wrong"
+                });
+            var buildList = buildInfo.Artifacts;
 
-            if (buildList == null || buildList.Count == 0)
+            if (buildList.Count == 0)
                 return NotFound(new ErrorMessage {
                     Message = "无法找到此构建"
                 });
 
             var latestBuild = buildList[0];
-            var artifactId = latestBuild["id"]?.ToString();
-
-            if (string.IsNullOrEmpty(artifactId))
-                return BadRequest(new ErrorMessage {
-                    Message = "无效的构建 ID"
-                });
+            var artifactId = latestBuild.Id;
 
             var stream = await _githubApiService.DownloadArtifact(artifactId);
-            var fileName = $"{latestBuild["name"]}_{artifactId}.zip";
+            var fileName = $"{latestBuild.Name}_{artifactId}.zip";
             return File(stream, "application/zip", fileName);
         } catch (Exception ex) {
             Console.WriteLine($"[Error] GetLatestArtifact: {ex}");
@@ -45,13 +44,8 @@ public class ArtifactController : ControllerBase {
         }
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetArtifactById([FromRoute] string id) {
-        if (string.IsNullOrWhiteSpace(id))
-            return BadRequest(new ErrorMessage {
-                Message = "构建 ID 不得为空"
-            });
-
+    [HttpGet("{id:long}")]
+    public async Task<IActionResult> GetArtifactById([FromRoute] long id) {
         try {
             var artifactInfo = await _githubApiService.GetArtifactById(id);
             if (artifactInfo == null)

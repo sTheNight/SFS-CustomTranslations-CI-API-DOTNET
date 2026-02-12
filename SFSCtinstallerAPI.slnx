@@ -1,5 +1,7 @@
 <Solution>
   <Folder Name="/SolutionFolder/">
+    <File Path=".dockerignore" />
+    <File Path="Dockerfile" />
     <File Path="LICENSE.txt" />
     <File Path="README.md" />
   </Folder>

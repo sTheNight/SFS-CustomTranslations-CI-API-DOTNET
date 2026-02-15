@@ -1,7 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using SFSCtinstallerAPI.Configuration;
 using SFSCtinstallerAPI.Models;
 
 namespace SFSCtinstallerAPI.Utils;

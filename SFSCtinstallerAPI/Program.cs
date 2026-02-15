@@ -1,6 +1,7 @@
 ﻿using dotenv.net;
 using System.Net.Http.Headers;
-using SFSCtinstallerAPI.Configuration;
+using Microsoft.Extensions.Options;
+using SFSCtinstallerAPI.Models;
 using SFSCtinstallerAPI.Utils;
 
 static bool LoadDotEnv() {
@@ -16,7 +17,6 @@ static bool LoadDotEnv() {
         return false;
     }
 }
-
 if (!LoadDotEnv()) {
     Console.Error.WriteLine("Error: Required GitHub environment variables are not configured. Application exit.");
     return;
@@ -25,12 +25,12 @@ if (!LoadDotEnv()) {
 var builder = WebApplication.CreateBuilder(args);
 // 注册 DI 服务
 builder.Services.Configure<GitHubSettings>(builder.Configuration);
-builder.Services.AddHttpClient<GithubApiService>(client => {
+builder.Services.AddHttpClient<GithubApiService>((sp,client) => {
+    var githubSettings = sp.GetRequiredService<IOptions<GitHubSettings>>();
     // 为 ApiHelper 配置 HttpClient
-    var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
     var header = client.DefaultRequestHeaders;
     client.BaseAddress = new Uri("https://api.github.com/");
-    header.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    header.Authorization = new AuthenticationHeaderValue("Bearer", githubSettings.Value.GITHUB_TOKEN);
     header.Add("Accept", "application/vnd.github+json");
     header.Add("X-GitHub-Api-Version", "2022-11-28");
     header.Add("User-Agent", "Github-REST-API-Test");
